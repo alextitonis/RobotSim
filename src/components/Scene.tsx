@@ -18,6 +18,8 @@ import { Robot } from "@/lib/robot/Robot";
 import * as CANNON from "cannon-es";
 import { FirstPersonCamera } from "@/lib/robot/simulation/FirstPersonCamera";
 import { RobotVision } from "@/components/RobotVision";
+import { NavigationGoal } from "../lib/robot/navigation/types";
+import { MapVision } from "@/components/MapVision";
 
 interface Character {
   mesh: TransformNode | null;
@@ -27,6 +29,7 @@ interface Character {
 const SceneComponent: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const visionCanvasRef = useRef<HTMLCanvasElement>(null);
+  const mapCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const standingCharacterRef = useRef<Character>({
     mesh: null,
@@ -94,6 +97,7 @@ const SceneComponent: React.FC = () => {
     );
     physicsWorld.addContactMaterial(defaultContactMaterial);
     physicsWorld.defaultContactMaterial = defaultContactMaterial;
+    scene.collisionsEnabled = true;
 
     // Add ground physics body
     const groundBody = new CANNON.Body({
@@ -111,7 +115,6 @@ const SceneComponent: React.FC = () => {
     // Create random obstacles
     const createRandomObstacles = () => {
       const numObstacles = 10;
-      const minDistance = 3; // Increased minimum distance
       const obstacles: {
         x: number;
         z: number;
@@ -164,13 +167,20 @@ const SceneComponent: React.FC = () => {
         if (attempts <= maxAttempts) {
           obstacles.push({ x, z, width, depth });
 
-          // Create box mesh
+          // Create box mesh with proper name
           const box = MeshBuilder.CreateBox(
             `obstacle${i}`,
             { width, height, depth },
             scene
           );
           box.position = new Vector3(x, height / 2, z);
+
+          // Add checkCollisions flag
+          box.checkCollisions = true;
+          box.isPickable = true;
+          box.enablePointerMoveEvents = true;
+          box.useOctreeForCollisions = true;
+          box.useOctreeForPicking = true;
 
           // Better looking materials
           const material = new StandardMaterial(`obstacleMaterial${i}`, scene);
@@ -248,7 +258,10 @@ const SceneComponent: React.FC = () => {
             llmType: "chatgpt",
             type: "simulation"
           },
-          robotCamera
+          scene,
+          robotCamera,
+          undefined, // llmPlugin
+          mapCanvasRef.current!
         );
 
         // Initialize robot's camera with scene after robot is created
@@ -367,7 +380,31 @@ const SceneComponent: React.FC = () => {
       }
     });
 
+    // Add keyboard event listener
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "g" && robotRef.current) {
+        // Set random goal within reasonable bounds
+        const randomGoal: NavigationGoal = {
+          pose: {
+            x: (Math.random() - 0.5) * 10,
+            y: (Math.random() - 0.5) * 10,
+            theta: Math.random() * Math.PI * 2
+          },
+          tolerance: {
+            position: 0.5, // 0.5 meters
+            orientation: 0.1 // ~6 degrees
+          }
+        };
+
+        console.log("Setting random goal:", randomGoal);
+        robotRef.current.setNavigationGoal(randomGoal);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+
     return () => {
+      window.removeEventListener("keydown", handleKeyPress);
       engine.dispose();
     };
   }, []);
@@ -376,6 +413,7 @@ const SceneComponent: React.FC = () => {
     <>
       <canvas ref={canvasRef} style={{ width: "100vw", height: "100vh" }} />
       <RobotVision canvasRef={visionCanvasRef} />
+      <MapVision canvasRef={mapCanvasRef} />
     </>
   );
 };
