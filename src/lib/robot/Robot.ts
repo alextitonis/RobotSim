@@ -3,15 +3,16 @@ import {
   RobotState,
   RobotConfig,
   IRobotCamera,
-  IRobotLLM
+  IRobotLLM,
+  IRobotSensorPlugin
 } from "./types";
 import { RobotPhysics } from "./simulation/RobotPhysics";
 import { Camera } from "@babylonjs/core";
 import { FirstPersonCamera } from "./simulation/FirstPersonCamera";
 import { ChatGPT } from "./llm/chatgpt";
 import { NavigationSystem } from "./navigation/NavigationSystem";
-import { LidarSensor } from "./sensors/LidarSensor";
-import { DepthCameraSensor } from "./sensors/DepthCameraSensor";
+import { LidarSensor } from "./sensors/simulation/LidarSensor";
+import { DepthCameraSensor } from "./sensors/simulation/DepthCameraSensor";
 import { Scene } from "@babylonjs/core";
 import { SensorReading } from "./sensors/types";
 import { NavigationGoal } from "./navigation/types";
@@ -35,6 +36,7 @@ export class Robot {
     scene: Scene,
     cameraPlugin?: IRobotCamera,
     llmPlugin?: IRobotLLM,
+    sensors: IRobotSensorPlugin[] = [],
     mapCanvas?: HTMLCanvasElement
   ) {
     this.position = position;
@@ -58,7 +60,6 @@ export class Robot {
         this.camera = new FirstPersonCamera();
       }
 
-      // Initialize sensors with scene
       console.log("dada scene sensor:", scene);
       const lidar = new LidarSensor({
         numberOfRays: 32,
@@ -77,13 +78,15 @@ export class Robot {
       });
       depthCamera.initialize({ scene });
 
-      // Add sensors to navigation system
       this.navigationSystem.addSensor(lidar);
       this.navigationSystem.addSensor(depthCamera);
 
-      // Set camera for depth sensor
       if (this.camera) {
         depthCamera.setCamera(this.camera.getCamera()!);
+      }
+    } else {
+      for (let i = 0; i < sensors.length; i++) {
+        this.navigationSystem.addSensor(sensors[i]);
       }
     }
 

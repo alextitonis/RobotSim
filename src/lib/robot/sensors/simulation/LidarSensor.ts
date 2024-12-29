@@ -1,6 +1,6 @@
 import { Scene, Vector3, Ray, RayHelper, Color3 } from "@babylonjs/core";
-import { ISensor, SensorParams, SensorReading } from "./types";
-import { TVector } from "../types";
+import { SensorParams, SensorReading } from "../types";
+import { IRobotSensorPlugin, TVector } from "../../types";
 
 export interface LidarConfig {
   numberOfRays: number;
@@ -11,7 +11,7 @@ export interface LidarConfig {
   verticalRays?: number;
 }
 
-export class LidarSensor implements ISensor {
+export class LidarSensor implements IRobotSensorPlugin {
   private scene: Scene | null = null;
   private rays: Ray[] = [];
   private rayHelpers: RayHelper[] = [];

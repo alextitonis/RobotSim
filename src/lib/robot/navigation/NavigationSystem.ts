@@ -1,4 +1,4 @@
-import { TVector } from "../types";
+import { IRobotSensorPlugin, TVector } from "../types";
 import {
   GridCell,
   OccupancyGrid,
@@ -9,7 +9,7 @@ import {
 } from "./types";
 import { PathPlanner } from "./PathPlanner";
 import { ParticleFilter } from "./ParticleFilter";
-import { ISensor, SensorReading } from "../sensors/types";
+import { SensorReading } from "../sensors/types";
 import { VectorFieldHistogram } from "./VectorFieldHistogram";
 import { SensorVisualizer } from "../visualization/SensorVisualizer";
 import { Scene } from "@babylonjs/core";
@@ -24,7 +24,7 @@ export class NavigationSystem {
   private readonly pathPlanner: PathPlanner;
   private particleFilter: ParticleFilter;
   private lastPosition: TVector;
-  public sensors: ISensor[] = [];
+  public sensors: IRobotSensorPlugin[] = [];
   private vfh: VectorFieldHistogram;
   private visualizer: SensorVisualizer | null = null;
   private mapVisualizer: MapVisualizer | null = null;
@@ -168,7 +168,6 @@ export class NavigationSystem {
           point.col < this.map.width
         ) {
           const cell = this.map.cells[point.row][point.col];
-          const oldOccupied = cell.occupied;
           const oldProbability = cell.probability;
 
           if (index === points.length - 1) {
@@ -453,7 +452,7 @@ export class NavigationSystem {
     return this.particleFilter.getParticlePoses();
   }
 
-  addSensor(sensor: ISensor): void {
+  addSensor(sensor: IRobotSensorPlugin): void {
     this.sensors.push(sensor);
   }
 

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Scene, Camera, RenderTargetTexture } from "@babylonjs/core";
-import { ISensor, SensorParams, SensorReading } from "./types";
-import { TVector } from "../types";
+import { SensorParams, SensorReading } from "../types";
+import { IRobotSensorPlugin, TVector } from "../../types";
 
 export interface DepthCameraConfig {
   width: number;
@@ -10,9 +11,9 @@ export interface DepthCameraConfig {
   samplingStride: number;
 }
 
-export class DepthCameraSensor implements ISensor {
+export class DepthCameraSensor implements IRobotSensorPlugin {
   private scene: Scene | null = null;
-  private camera: Camera | null = null;
+  private camera: any | null = null;
   private renderTarget: RenderTargetTexture | null = null;
   private readonly config: DepthCameraConfig;
 
@@ -44,7 +45,7 @@ export class DepthCameraSensor implements ISensor {
     scene.customRenderTargets.push(this.renderTarget);
   }
 
-  setCamera(camera: Camera): void {
+  setCamera(camera: any): void {
     this.camera = camera;
   }
 

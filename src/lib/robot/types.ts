@@ -2,6 +2,7 @@
 import { Camera } from "@babylonjs/core";
 import { ChatCompletionChunk } from "openai/resources/index.mjs";
 import { Stream } from "openai/streaming.mjs";
+import { SensorParams, SensorReading } from "./sensors/types";
 
 export type TVector = {
   x: number;
@@ -42,4 +43,12 @@ export interface IRobotLLM {
   initialize(params: IRobotLLMParams): void;
   complete(prompt: string): Promise<string>;
   stream(prompt: string): Promise<Stream<ChatCompletionChunk>>;
+}
+
+export interface IRobotSensorPlugin {
+  initialize(params: SensorParams): void;
+  update(
+    robotPosition: TVector,
+    robotRotation: TVector
+  ): Promise<SensorReading[]> | SensorReading[];
 }
